@@ -9,8 +9,10 @@ parser = argparse.ArgumentParser(description='Test your Kendra with a Search Que
 parser.add_argument('--access_key', required=False, type=str, help="Access key credentials")
 parser.add_argument('--secret_key', required=False, type=str, help="Secret key credentials ")
 parser.add_argument('--region', required=False, default= 'us-east-1', help="Specify the region. ")
+
 parser.add_argument('--bucket', required=False, help="Specify the data bucket ")
 parser.add_argument('--object', required=False, help="Specify the data Object ")
+parser.add_argument('--file', required=False, help="Specify the file in your local directory")
 
 parser.add_argument('--index_id', required=False, type=str, help="Kendra Index ID ")
 args = parser.parse_args()
@@ -36,14 +38,16 @@ s3client = boto3.client('s3',
                         aws_secret_access_key=secret_key,
                         region_name=region)
 
-## get the bucket and object names
-#s3_objects = s3client.list_objects_v2(Bucket=bucket)
-
 print("[INFO]: Reading the Input data")
-#s3_file = s3client.get_object(Bucket=bucket, Key=object)
-s3_file = "input-file.csv" 
+if args.file:
+    input_file = args.file
+elif args.object:
+    input_file = s3client.get_object(Bucket=bucket, Key=object)
+else:
+    input_file = "input-file.csv" 
+
 data = {}
-with open(s3_file) as file:
+with open(input_file) as file:
     for row in csv.DictReader(file):
         for key, values in row.items():
             if key not in data:
@@ -92,8 +96,9 @@ with open(file_name, 'wt') as out_file:
 
             csv_writer.writerow([query_text, answer_text, document_title, document_text, document_url])
   
-## Save the file in S3                      
-#object_name = "output/" + file_name
-#response = s3client.upload_file(file_name, bucket, object_name)     
+## Save the file in S3 
+if args.bucket:
+    s3client.upload_file(file_name, args.bucket, file_name)
+    print("[INFO]: File saved in S3 bucket: " + args.bucket)                       
     
-print("[INFO]: Successfully processed the test data")
+print("[INFO]: Successfully processed the Kendra Job")
