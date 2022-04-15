@@ -4,7 +4,7 @@ import datetime
 import csv
 
 ## parse the args
-parser = argparse.ArgumentParser(description='Test your Kendra with a Search Queries')
+parser = argparse.ArgumentParser(description='Test your Kendra with Search Queries')
 
 parser.add_argument('--access_key', required=False, type=str, help="Access key credentials")
 parser.add_argument('--secret_key', required=False, type=str, help="Secret key credentials ")
