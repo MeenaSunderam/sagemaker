@@ -14,7 +14,7 @@ parser.add_argument('--bucket', required=False, help="Specify the data bucket ")
 parser.add_argument('--object', required=False, help="Specify the data Object ")
 parser.add_argument('--file', required=False, help="Specify the file in your local directory")
 
-parser.add_argument('--index_id', required=False, type=str, help="Kendra Index ID ")
+parser.add_argument('--index_id', required=True, type=str, help="Kendra Index ID ")
 args = parser.parse_args()
 
 ## Set connection info
@@ -24,8 +24,8 @@ region = args.region
 bucket = args.bucket
 object = args.object
 
-#kendra_indexid = args.index_id
-kendra_indexid = 'fecbcae4-f043-4fbf-8fc0-e5e8f65c6fdd'
+kendra_indexid = args.index_id
+#kendra_indexid = 'fecbcae4-f043-4fbf-8fc0-e5e8f65c6fdd'
 
 ## get the boto3 clients
 kendraclient = boto3.client('kendra',
@@ -38,13 +38,12 @@ s3client = boto3.client('s3',
                         aws_secret_access_key=secret_key,
                         region_name=region)
 
-print("[INFO]: Reading the Input data")
 if args.file:
     input_file = args.file
+    print("[INFO]: Reading the Input data - Using the file mode")
 elif args.object:
     input_file = s3client.get_object(Bucket=bucket, Key=object)
-else:
-    input_file = "input-file.csv" 
+    print("[INFO]: Reading the Input data - Using S3 Object mode")
 
 data = {}
 with open(input_file) as file:
@@ -74,13 +73,13 @@ with open(file_name, 'wt') as out_file:
         
         for query_result in response['ResultItems'][:5]:
 
-            print('-------------------')
-            print('Type: ' + str(query_result['Type']))
+            #print('-------------------')
+            #print('Type: ' + str(query_result['Type']))
             
             answer_text = ""
             if query_result['Type']=='ANSWER' or query_result['Type'] == 'QUESTION_ANSWER':
                 answer_text = query_result['DocumentExcerpt']['Text']
-                print(answer_text)
+                #print(answer_text)
                 
             document_text =""
             document_url = ""
@@ -89,10 +88,10 @@ with open(file_name, 'wt') as out_file:
             if query_result['Type']=='DOCUMENT':
                 if 'DocumentTitle' in query_result:
                     document_title = query_result['DocumentTitle']['Text']
-                    print('Title: ' + document_title)
+                    #print('Title: ' + document_title)
                 document_text = query_result['DocumentExcerpt']['Text']
                 document_url = query_result['DocumentURI']
-                print(document_text)
+                #print(document_text)
 
             csv_writer.writerow([query_text, answer_text, document_title, document_text, document_url])
   
